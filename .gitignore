@@ -4,3 +4,5 @@ data
 cifar10
 stl10
 runs
+*.out
+test_sbatch.sh
