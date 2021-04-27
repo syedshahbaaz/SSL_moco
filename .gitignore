@@ -3,3 +3,4 @@ __pycache__
 data
 cifar10
 stl10
+runs

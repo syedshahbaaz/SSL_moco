@@ -46,7 +46,7 @@ parser.add_argument('--knn-k', default=200, type=int, help='k in kNN monitor')
 parser.add_argument('--knn-t', default=0.1, type=float, help='softmax temperature in kNN monitor; could be different with moco-t')
 
 # knn test flag
-parser.add_argument('--knn', default='False', type=str, help='option to get knn accuracy')
+parser.add_argument('--knn', action='store_true', help='option to get knn accuracy')
 # utils
 parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--results-dir', default='', type=str, metavar='PATH', help='path to cache (default: none)')
@@ -85,7 +85,7 @@ def main():
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=0.9)
 
     moco_train = TrainUtils(model = model, train_loader= train_loader, optimizer= optimizer, args= args, args_dict=vars(args), memory_loader=memory_loader, test_loader=test_loader)
-    if(args.knn == 'True'):
+    if(args.knn):
         moco_train.knn_train()
     else:
         moco_train.train()

@@ -9,12 +9,14 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torchvision import datasets
 import argparse
+import logging
 
 parser = argparse.ArgumentParser(description='PyTorch MoCo Linear Eval')
 parser.add_argument('-pt_ssl','--pre_train_ssl', action='store_true', \
     help='What backend to use for pretraining. Boolean. \
         Default pt_ssl=False, i.e, ImageNet pretrained network. ')
 parser.add_argument('--model-dir', default='', type=str, metavar='PATH', help='path to directory where pretrained model is saved')
+parser.add_argument('--epochs', '-e', default=100, type=int, metavar='N', help='number of epochs')
 
 
 def accuracy(output, target, topk=(1,)):
@@ -65,6 +67,7 @@ def main():
     args = parser.parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu' #update args.device
     print("Using device:", device) 
+    logging.basicConfig(filename=os.path.join(args.model_dir, 'linear_eval.log'), level=logging.DEBUG)
     if not args.pre_train_ssl: #use ImageNet pretrained network
         pass
     else: # use SSL pre_trained network
@@ -80,11 +83,11 @@ def main():
         checkpoint = torch.load(os.path.join(args.model_dir, 'model.pth'))
         log = model.load_state_dict(checkpoint['state_dict'], strict=False)
 
+        print("Dataset:", config['dataset'])
         if config['dataset'] == 'cifar10':
             train_loader, test_loader = get_cifar10_data_loaders(download=True)
         elif config['dataset'] == 'stl10':
             train_loader, test_loader = get_stl10_data_loaders(download=True)
-        print("Dataset:", config['dataset'])
 
         # freeze all layers but the last fc
         for name, param in model.named_parameters():
@@ -98,7 +101,7 @@ def main():
     criterion = torch.nn.CrossEntropyLoss().to(device)
 
 
-    epochs = 100
+    epochs = args.epochs
     for epoch in range(1, epochs+1):
         top1_train_accuracy = 0
         for counter, (x_batch, y_batch) in enumerate(train_loader):
@@ -129,7 +132,8 @@ def main():
         
         top1_accuracy /= (counter + 1)
         top5_accuracy /= (counter + 1)
-        print("Epoch {}\tTop1 Train accuracy {:.2f}\tTop1 Test accuracy: {:.2f}\tTop5 test acc: {:.2f}".format(epoch,top1_train_accuracy.item(),top1_accuracy.item(),top5_accuracy.item()))
+        logging.info("Epoch {}\tTrain Acc@1 {:.2f}\tTest Acc@1: {:.2f}\tTest Acc@5: {:.2f}".format(epoch,top1_train_accuracy.item(),top1_accuracy.item(),top5_accuracy.item()))
+        print("Epoch {}\tTrain Acc@1 {:.2f}\tTest Acc@1: {:.2f}\tTest Acc@5: {:.2f}".format(epoch,top1_train_accuracy.item(),top1_accuracy.item(),top5_accuracy.item()))
 
 
 if __name__ == "__main__":
