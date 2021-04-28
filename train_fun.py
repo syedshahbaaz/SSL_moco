@@ -106,7 +106,10 @@ class TrainUtils:
             # [D, N]
             feature_bank = torch.cat(feature_bank, dim=0).t().contiguous()
             # [N]
-            feature_labels = torch.tensor(memory_data_loader.dataset.targets, device=feature_bank.device)
+            if(args.dataset == 'stl10'):
+                feature_labels = torch.tensor(memory_data_loader.dataset.labels, device=feature_bank.device)
+            else:
+                feature_labels = torch.tensor(memory_data_loader.dataset.targets, device=feature_bank.device)
             # loop test data to predict the label by weighted knn search
             test_bar = tqdm(test_data_loader)
             for data, target in test_bar:
@@ -136,6 +139,7 @@ class TrainUtils:
         # counts for each class
         one_hot_label = torch.zeros(feature.size(0) * knn_k, classes, device=sim_labels.device)
         # [B*K, C]
+        print(sim_labels.view(-1,1))
         one_hot_label = one_hot_label.scatter(dim=-1, index=sim_labels.view(-1, 1), value=1.0)
         # weighted score ---> [B, C]
         pred_scores = torch.sum(one_hot_label.view(feature.size(0), -1, classes) * sim_weight.unsqueeze(dim=-1), dim=1)

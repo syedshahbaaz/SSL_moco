@@ -42,19 +42,20 @@ class ModelBase(nn.Module):
         # use split batchnorm
         norm_layer = partial(SplitBatchNorm, num_splits=bn_splits) if bn_splits > 1 else nn.BatchNorm2d
         resnet_arch = models.__dict__[arch]
-        net = resnet_arch(pretrained=False, num_classes=feature_dim, norm_layer=norm_layer)
-        
-        self.net = []
-        for name, module in net.named_children():
-            if name == 'conv1':
-                module = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
-            if isinstance(module, nn.MaxPool2d):
-                continue
-            if isinstance(module, nn.Linear):
-                self.net.append(nn.Flatten(1))
-            self.net.append(module)
+        self.net = resnet_arch(pretrained=False, num_classes=feature_dim, norm_layer=norm_layer)
+        dim_mlp = self.net.fc.in_features #512 for ResNet18
+        self.net.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.net.fc) # add mlp projection head
+        # self.net = []
+        # for name, module in net.named_children():
+        #     if name == 'conv1':
+        #         module = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        #     if isinstance(module, nn.MaxPool2d):
+        #         continue
+        #     if isinstance(module, nn.Linear):
+        #         self.net.append(nn.Flatten(1))
+        #     self.net.append(module)
 
-        self.net = nn.Sequential(*self.net)
+        # self.net = nn.Sequential(*self.net)
 
     def forward(self, x):
         x = self.net(x)

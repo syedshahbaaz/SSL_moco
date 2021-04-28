@@ -12,11 +12,12 @@ import argparse
 import logging
 
 parser = argparse.ArgumentParser(description='PyTorch MoCo Linear Eval')
-parser.add_argument('-pt_ssl','--pre_train_ssl', action='store_true', \
+parser.add_argument('-pt-ssl','--pre_train_ssl', action='store_true', \
     help='What backend to use for pretraining. Boolean. \
         Default pt_ssl=False, i.e, ImageNet pretrained network. ')
 parser.add_argument('--model-dir', default='', type=str, metavar='PATH', help='path to directory where pretrained model is saved')
 parser.add_argument('--epochs', '-e', default=100, type=int, metavar='N', help='number of epochs')
+parser.add_argument('--dataset-ft', type=str, help='name of the dataset to fine tune the pretrained model on')
 
 
 def accuracy(output, target, topk=(1,)):
@@ -68,6 +69,7 @@ def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu' #update args.device
     print("Using device:", device) 
     logging.basicConfig(filename=os.path.join(args.model_dir, 'linear_eval.log'), level=logging.DEBUG)
+    
     if not args.pre_train_ssl: #use ImageNet pretrained network
         pass
     else: # use SSL pre_trained network
@@ -82,12 +84,22 @@ def main():
 
         checkpoint = torch.load(os.path.join(args.model_dir, 'model.pth'))
         log = model.load_state_dict(checkpoint['state_dict'], strict=False)
-
-        print("Dataset:", config['dataset'])
-        if config['dataset'] == 'cifar10':
-            train_loader, test_loader = get_cifar10_data_loaders(download=True)
-        elif config['dataset'] == 'stl10':
-            train_loader, test_loader = get_stl10_data_loaders(download=True)
+        if(args.dataset_ft):
+            logging.info(f'Fine tune on Dataset: {args.dataset_ft}')
+            print(f'Fine tune on Dataset: {args.dataset_ft}')
+            if(args.dataset_ft == 'cifar10'):
+                train_loader, test_loader = get_cifar10_data_loaders(download=True)
+            elif(args.dataset_ft =='stl10'):
+                train_loader, test_loader = get_stl10_data_loaders(download=True)
+        else:
+            logging.info(f'Fine tune on Dataset: {config["dataset"]}')
+            print(f'Fine tune on Dataset: {config["dataset"]}')
+            if config['dataset'] == 'cifar10':
+                train_loader, test_loader = get_cifar10_data_loaders(download=True)
+            elif config['dataset'] == 'stl10':
+                train_loader, test_loader = get_stl10_data_loaders(download=True)
+        
+        
 
         # freeze all layers but the last fc
         for name, param in model.named_parameters():
@@ -120,6 +132,7 @@ def main():
         top1_train_accuracy /= (counter + 1)
         top1_accuracy = 0
         top5_accuracy = 0
+        
         for counter, (x_batch, y_batch) in enumerate(test_loader):
             x_batch = x_batch.to(device)
             y_batch = y_batch.to(device)
