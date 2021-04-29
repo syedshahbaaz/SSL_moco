@@ -9,6 +9,6 @@
 module load cuda
 module load anaconda3/3.7
 source activate pytorch_env
-python pre_train.py --knn -a resnet50 --dataset cifar10 --epochs 100 --results-dir cifar10 --moco-k 32768&
+python pre_train.py --knn -a resnet50 --dataset cifar10 --epochs 100 --results-dir cifar10 --moco-k 32768 &
 sleep 60
 python pre_train.py --knn -a resnet50 --dataset cifar10 --epochs 100 --results-dir cifar10 --moco-k 65536
