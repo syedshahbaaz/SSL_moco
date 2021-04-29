@@ -11,5 +11,4 @@ module load anaconda3/3.7
 source activate pytorch_env
 python pre_train.py --knn -a resnet50 --dataset cifar10 --epochs 100 --results-dir cifar10 &
 sleep 60
-python pre_train.py --knn -a resnet50 --dataset cifar10 --epochs 100 --results-dir cifar10 --moco-k 8192 &
-sleep 60
+python pre_train.py --knn -a resnet50 --dataset cifar10 --epochs 100 --results-dir cifar10 --moco-k 8192
