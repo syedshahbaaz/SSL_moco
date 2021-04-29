@@ -147,13 +147,14 @@ class TrainUtils:
         pred_labels = pred_scores.argsort(dim=-1, descending=True)
         return pred_labels
 
-    def train(self):
+    def train(self, epoch_start=1):
         # training loop
         
         epoch_start = 1
         self.n_iter= 0
 
-        logging.info(f"Start MoCo training for {self.args.epochs} epochs.")
+        if(self.args.resume is ''):
+            logging.info(f"Start MoCo training for {self.args.epochs} epochs.")
 
         for epoch in range(epoch_start, self.args.epochs + 1):
             train_loss = self.train_one_epoch(self.model, self.train_loader, self.optimizer, epoch, self.args)
@@ -163,14 +164,15 @@ class TrainUtils:
         
         logging.info(f"Model, metadata and training log has been saved at {self.path}.")
 
-    def knn_train(self):
+    def knn_train(self, epoch_start=1):
         # training loop
         
-        epoch_start = 1
+        
         self.n_iter= 0
 
-        logging.info(f"Start MoCo training for {self.args.epochs} epochs. knn testing")
-
+        if(self.args.resume is ''):
+            logging.info(f"Start MoCo training for {self.args.epochs} epochs. knn testing")
+    
         for epoch in range(epoch_start, self.args.epochs + 1):
             train_loss = self.train_one_epoch(self.model, self.train_loader, self.optimizer, epoch, self.args)
             test_acc_1 = self.test(self.model.encoder_q, self.memory_loader, self.test_loader, epoch, self.args)

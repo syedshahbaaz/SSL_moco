@@ -84,11 +84,20 @@ def main():
     # define optimizer
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=0.9)
 
-    moco_train = TrainUtils(model = model, train_loader= train_loader, optimizer= optimizer, args= args, args_dict=vars(args), memory_loader=memory_loader, test_loader=test_loader)
-    if(args.knn):
-        moco_train.knn_train()
+    if args.resume is not '':
+        checkpoint = torch.load(args.resume)
+        model.load_state_dict(checkpoint['state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        epoch_start = checkpoint['epoch'] + 1
+        print('Loaded from: {}'.format(args.resume))
     else:
-        moco_train.train()
+        epoch_start =1
+    moco_train = TrainUtils(model = model, train_loader= train_loader, optimizer= optimizer, args= args, args_dict=vars(args), memory_loader=memory_loader, test_loader=test_loader)
+    
+    if(args.knn):
+        moco_train.knn_train(epoch_start)
+    else:
+        moco_train.train(epoch_start)
 
 if __name__ == "__main__":
     main()
